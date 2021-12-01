@@ -4,22 +4,20 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class Route {
+public record Route<E extends Edge<?>>(List<E> edges) {
 
-	private final List<Edge> edges;
-
-	public Route(final List<Edge> edges) {
+	public Route(final List<E> edges) {
 		this.edges = Objects.requireNonNull(edges);
 	}
 
-	public List<Edge> edges() {
+	@Override
+	public List<E> edges() {
 		return Collections.unmodifiableList(edges);
 	}
 
 	@Override
 	public boolean equals(final Object o) {
-		if (o instanceof Route) {
-			final Route other = (Route) o;
+		if (o instanceof final Route other) {
 			return Objects.equals(edges, other.edges);
 		}
 		return false;
@@ -32,6 +30,6 @@ public class Route {
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + " " + edges.toString();
+		return getClass().getSimpleName() + " " + edges;
 	}
 }
