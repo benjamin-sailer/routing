@@ -1,94 +1,90 @@
-package de.bsailer.routing;
+package de.bsailer.routing.traversal;
 
 import static de.bsailer.test.ExtendedAssert.assertEqualsDouble;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.List;
 
+import de.bsailer.routing.model.Edge;
+import de.bsailer.routing.model.Route;
+import de.bsailer.routing.model.Graph;
+import de.bsailer.routing.model.impl.SimpleEdge;
+import de.bsailer.routing.model.impl.SimpleEdgeIdentifier;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+@SuppressWarnings("OptionalGetWithoutIsPresent")
 @RunWith(MockitoJUnitRunner.class)
 public class DijkstraTest {
 
 	@Mock
-	private Graph graph;
+	private Graph<Edge<SimpleEdgeIdentifier>> graph;
 
-	@Mock
-	private Edge startEdge;
+	private final Edge<SimpleEdgeIdentifier> startEdge = new SimpleEdge(new SimpleEdgeIdentifier(1));
 
-	@Mock
-	private Edge veryShortEdge;
+	private final Edge<SimpleEdgeIdentifier> veryShortEdge = new SimpleEdge(new SimpleEdgeIdentifier(2)).setWeight(2.0D);
 
-	@Mock
-	private Edge shortEdge;
+	private final Edge<SimpleEdgeIdentifier> shortEdge = new SimpleEdge(new SimpleEdgeIdentifier(3)).setWeight(3.0D);
 
-	@Mock
-	private Edge mediumEdge;
+	private final Edge<SimpleEdgeIdentifier> mediumEdge = new SimpleEdge(new SimpleEdgeIdentifier(4)).setWeight(4.0D);
 
-	@Mock
-	private Edge longEdge;
+	private final Edge<SimpleEdgeIdentifier> longEdge = new SimpleEdge(new SimpleEdgeIdentifier(5)).setWeight(4.0D);
 
-	@Mock
-	private Edge veryLongEdge;
+	private final Edge<SimpleEdgeIdentifier> veryLongEdge = new SimpleEdge(new SimpleEdgeIdentifier(6)).setWeight(6.0D);
 
-	@Mock
-	private Edge targetEdge;
+	private final Edge<SimpleEdgeIdentifier> targetEdge = new SimpleEdge(new SimpleEdgeIdentifier(7));
 
-	private Dijkstra sut;
+	private Dijkstra<Edge<SimpleEdgeIdentifier>, SimpleEdgeIdentifier> sut;
 
 	/**
 	 * given situation:
 	 *
 	 * <pre>
-	 * start -> short (1.0) -> target
-	 *       -> long (2.0)  ->
+	 * start -> short (3.0) -> target
+	 *       -> long (4.0)  ->
 	 * </pre>
 	 *
 	 * short should be chosen.
 	 */
 	@Test
-	public void givenTwoEdgesShorterChoosen() {
+	public void givenTwoEdgesShorterChosenAsRoute() {
 		when(graph.adjacents(startEdge)).thenReturn(List.of(shortEdge, longEdge));
 		when(graph.adjacents(shortEdge)).thenReturn(List.of(targetEdge));
 		when(graph.adjacents(longEdge)).thenReturn(List.of(targetEdge));
-		when(shortEdge.weight()).thenReturn(1.0D);
-		when(longEdge.weight()).thenReturn(2.0D);
-		sut = new Dijkstra(graph);
-		assertEquals(new Route(List.of(startEdge, shortEdge, targetEdge)), sut.pathFromTo(startEdge, targetEdge).get());
+		sut = new Dijkstra<>(graph);
+		assertEquals(new Route<>(List.of(startEdge, shortEdge, targetEdge)), sut.pathFromTo(startEdge, targetEdge).get());
 	}
 
 	/**
 	 * given situation:
 	 *
 	 * <pre>
-	 * start -> short (1.0) -> target
-	 *       -> long (2.0)  ->
+	 * start -> short (3.0) -> target
+	 *       -> long (4.0)  ->
 	 * </pre>
 	 *
 	 * short value should be returned.
 	 */
 	@Test
-	public void givenTwoEdgesShorterCostShouldBeGiven() {
+	public void givenTwoEdgesShorterCostShouldBeReturned() {
 		when(graph.adjacents(startEdge)).thenReturn(List.of(shortEdge, longEdge));
 		when(graph.adjacents(shortEdge)).thenReturn(List.of(targetEdge));
 		when(graph.adjacents(longEdge)).thenReturn(List.of(targetEdge));
-		when(shortEdge.weight()).thenReturn(1.0D);
-		when(longEdge.weight()).thenReturn(2.0D);
-		sut = new Dijkstra(graph);
-		assertEqualsDouble(1.0D, sut.costFromTo(startEdge, targetEdge));
+		sut = new Dijkstra<>(graph);
+		assertEqualsDouble(3.0D, sut.costFromTo(startEdge, targetEdge));
 	}
 
 	/**
 	 * given situation:
 	 *
 	 * <pre>
-	 * start -> short (1.0) -> target -> medium
-	 *       -> long (2.0)  ->
+	 * start -> short (3.0) -> target -> medium
+	 *       -> long (4.0)  ->
 	 * </pre>
 	 *
 	 * medium should not at all be evaluated.
@@ -99,10 +95,8 @@ public class DijkstraTest {
 		when(graph.adjacents(shortEdge)).thenReturn(List.of(targetEdge));
 		when(graph.adjacents(longEdge)).thenReturn(List.of(targetEdge));
 		when(graph.adjacents(targetEdge)).thenReturn(List.of(mediumEdge));
-		when(shortEdge.weight()).thenReturn(1.0D);
-		when(longEdge.weight()).thenReturn(2.0D);
-		sut = new Dijkstra(graph);
-		assertEquals(new Route(List.of(startEdge, shortEdge, targetEdge)), sut.pathFromTo(startEdge, targetEdge).get());
+		sut = new Dijkstra<>(graph);
+		assertEquals(new Route<>(List.of(startEdge, shortEdge, targetEdge)), sut.pathFromTo(startEdge, targetEdge).get());
 	}
 
 	/**
@@ -122,12 +116,8 @@ public class DijkstraTest {
 		when(graph.adjacents(shortEdge)).thenReturn(List.of(veryLongEdge));
 		when(graph.adjacents(veryShortEdge)).thenReturn(List.of(targetEdge));
 		when(graph.adjacents(veryLongEdge)).thenReturn(List.of(targetEdge));
-		when(veryShortEdge.weight()).thenReturn(2.0D);
-		when(shortEdge.weight()).thenReturn(3.0D);
-		when(longEdge.weight()).thenReturn(4.0D);
-		when(veryLongEdge.weight()).thenReturn(6.0D);
-		sut = new Dijkstra(graph);
-		assertEquals(new Route(List.of(startEdge, longEdge, veryShortEdge, targetEdge)),
+		sut = new Dijkstra<>(graph);
+		assertEquals(new Route<>(List.of(startEdge, longEdge, veryShortEdge, targetEdge)),
 				sut.pathFromTo(startEdge, targetEdge).get());
 	}
 
@@ -149,27 +139,31 @@ public class DijkstraTest {
 		when(graph.adjacents(veryShortEdge)).thenReturn(List.of(mediumEdge));
 		when(graph.adjacents(veryLongEdge)).thenReturn(List.of(mediumEdge));
 		when(graph.adjacents(mediumEdge)).thenReturn(List.of(targetEdge));
-		when(veryShortEdge.weight()).thenReturn(2.0D);
-		when(shortEdge.weight()).thenReturn(3.0D);
-		when(mediumEdge.weight()).thenReturn(4.0D);
-		when(veryLongEdge.weight()).thenReturn(6.0D);
-		sut = new Dijkstra(graph);
-		assertEquals(new Route(List.of(startEdge, shortEdge, veryShortEdge, mediumEdge, targetEdge)),
+		sut = new Dijkstra<>(graph);
+		assertEquals(new Route<>(List.of(startEdge, shortEdge, veryShortEdge, mediumEdge, targetEdge)),
 				sut.pathFromTo(startEdge, targetEdge).get());
 	}
 
 	@Test
 	public void givenIncompletePathsToTarget() {
 		when(graph.adjacents(startEdge)).thenReturn(List.of(shortEdge, veryLongEdge));
-		sut = new Dijkstra(graph);
+		sut = new Dijkstra<>(graph);
 		assertFalse(sut.pathFromTo(startEdge, targetEdge).isPresent());
 	}
 
 	@Test
 	public void givenIncompletePathsToTargetShouldGivePositiveInfinityWeight() {
 		when(graph.adjacents(startEdge)).thenReturn(List.of(shortEdge, veryLongEdge));
-		sut = new Dijkstra(graph);
+		sut = new Dijkstra<>(graph);
 		assertEqualsDouble(Double.POSITIVE_INFINITY, sut.costFromTo(startEdge, targetEdge));
+	}
+
+	@Test
+	public void givenGraphIsTraversedCostsReturnsTheCostMap() {
+		when(graph.adjacents(startEdge)).thenReturn(List.of(veryShortEdge));
+		sut = new Dijkstra<>(graph);
+		sut.run(startEdge);
+		assertEquals(Collections.singletonMap(new SimpleEdgeIdentifier(2), 0.0D), sut.costs(veryShortEdge));
 	}
 
 }

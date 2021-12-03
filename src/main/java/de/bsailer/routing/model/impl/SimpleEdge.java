@@ -1,4 +1,6 @@
-package de.bsailer.routing;
+package de.bsailer.routing.model.impl;
+
+import de.bsailer.routing.model.Edge;
 
 public class SimpleEdge implements Edge<SimpleEdgeIdentifier> {
 
@@ -6,7 +8,7 @@ public class SimpleEdge implements Edge<SimpleEdgeIdentifier> {
 	private double weight;
 	private double length;
 
-	public SimpleEdge(SimpleEdgeIdentifier id) {
+	public SimpleEdge(final SimpleEdgeIdentifier id) {
 		this.id = id;
 	}
 
@@ -24,7 +26,7 @@ public class SimpleEdge implements Edge<SimpleEdgeIdentifier> {
 		return length;
 	}
 
-	public Edge setWeight(final double weight) {
+	public SimpleEdge setWeight(final double weight) {
 		this.weight = weight;
 		return this;
 	}
@@ -34,4 +36,8 @@ public class SimpleEdge implements Edge<SimpleEdgeIdentifier> {
 		return this;
 	}
 
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "{id=" + id + ", weight=" + weight + ", length=" + length + "}";
+	}
 }

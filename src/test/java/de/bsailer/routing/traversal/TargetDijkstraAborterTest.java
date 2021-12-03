@@ -1,31 +1,28 @@
-package de.bsailer.routing;
+package de.bsailer.routing.traversal;
+
+import de.bsailer.routing.model.Edge;
+import de.bsailer.routing.model.impl.SimpleEdge;
+import de.bsailer.routing.model.impl.SimpleEdgeIdentifier;
+import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-
-@RunWith(MockitoJUnitRunner.class)
 public class TargetDijkstraAborterTest {
 
-	@Mock
-	private Edge current;
+	private final Edge<SimpleEdgeIdentifier> current = new SimpleEdge(new SimpleEdgeIdentifier(1));
 
-	@Mock
-	private Edge target;
+	private final Edge<SimpleEdgeIdentifier> target = new SimpleEdge(new SimpleEdgeIdentifier(2));
 
 	@Test
 	public void abortsOnTarget() {
-		final var sut = new TargetDijkstraAborter(target);
+		final var sut = new TargetDijkstraAborter<>(target);
 		assertTrue(sut.abort(target));
 	}
 
 	@Test
 	public void continuesElse() {
-		final var sut = new TargetDijkstraAborter(target);
+		final var sut = new TargetDijkstraAborter<>(target);
 		assertFalse(sut.abort(current));
 	}
 }

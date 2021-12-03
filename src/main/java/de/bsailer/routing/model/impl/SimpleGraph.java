@@ -1,11 +1,18 @@
-package de.bsailer.routing;
+package de.bsailer.routing.model.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import de.bsailer.routing.model.Edge;
+import de.bsailer.routing.model.EdgeIdentifier;
+import de.bsailer.routing.model.Graph;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Simple {@code Map}-based implementation of {@code Graph}.
+ *
+ * @param <E> concrete type of {@code Edge}s within the graph.
+ * @param <I> concrete type of {@code IndexProvidingEdgeIdentifier} of these edges.
+ */
 public class SimpleGraph<E extends Edge<I>, I extends EdgeIdentifier<I>> implements Graph<E> {
 
 	private final Map<I, E> edges = new HashMap<>();
@@ -18,26 +25,15 @@ public class SimpleGraph<E extends Edge<I>, I extends EdgeIdentifier<I>> impleme
 		return edgeAdjacents.stream().map(edges::get).collect(Collectors.toList());
 	}
 
-	public int addEdge(final E edge) {
+	public void addEdge(final E edge) {
 		edges.put(edge.id(), edge);
-		return edges.size() - 1;
 	}
 
-	public void connectEdges(final I edge, final I adjacent) {
-		adjacents.get(edge).add(adjacent);
-	}
-
-	@Override
-	public boolean equals(final Object o) {
-		if (o instanceof final SimpleGraph other) {
-			return edges.keySet().equals(other.edges.keySet()) && adjacents.equals(other.adjacents);
+	public void connectEdges(final I edgeId, final I adjacentId) {
+		if (!adjacents.containsKey(edgeId)) {
+			adjacents.put(edgeId, new ArrayList<>());
 		}
-		return false;
-	}
-
-	@Override
-	public int hashCode() {
-		return 31 * edges.hashCode() + adjacents.hashCode();
+		adjacents.get(edgeId).add(adjacentId);
 	}
 
 	@Override

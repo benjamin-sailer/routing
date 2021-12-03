@@ -1,15 +1,11 @@
-package de.bsailer.routing;
+package de.bsailer.routing.traversal;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.PriorityQueue;
+import de.bsailer.routing.model.Edge;
+import de.bsailer.routing.model.EdgeIdentifier;
+import de.bsailer.routing.model.Graph;
+import de.bsailer.routing.model.Route;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -28,13 +24,21 @@ import java.util.stream.Collectors;
  * of the object itself).
  *
  * @author bsailer
+ *
+ * @param <E> concrete type of {@code Edge}
+ * @param <I> concrete type of {@code EdgeIdentifier}
  */
 public class Dijkstra<E extends Edge<I>, I extends EdgeIdentifier<I>> {
 
-	private final DijkstraEdge<E> INFINITY_EDGE = new DijkstraEdge<>(Double.POSITIVE_INFINITY);
+	private final DijkstraEdge<E> INFINITY_EDGE = new DijkstraEdge<>(Double.POSITIVE_INFINITY) {
+		@Override
+		E edge() {
+			throw new UnsupportedOperationException("the infinity DijkstraEdge has no underlying graph edge");
+		}
+	};
 	private final Graph<E> graph;
 	private final PriorityQueue<DijkstraEdge<E>> queue = new PriorityQueue<>();
-	private final Map<E, DijkstraEdge<E>> visited = new IdentityHashMap<>();
+	private final Map<I, DijkstraEdge<E>> visited = new HashMap<>();
 	private DijkstraAborter<E> aborter = new DefaultDijkstraAborter<>();
 
 	public Dijkstra(final Graph<E> graph) {
@@ -76,10 +80,10 @@ public class Dijkstra<E extends Edge<I>, I extends EdgeIdentifier<I>> {
 	 * @return {@code Map<Edge, Optional<Route>>}.
 	 */
 	@SafeVarargs
-	public final Map<E, Optional<Route<E>>> routes(final E... targets) {
-		final Map<E, Optional<Route<E>>> result = new HashMap<>();
+	public final Map<I, Optional<Route<E>>> routes(final E... targets) {
+		final Map<I, Optional<Route<E>>> result = new HashMap<>();
 		for (final E target : targets) {
-			result.put(target, createRoute(target));
+			result.put(target.id(), createRoute(target));
 		}
 		return result;
 	}
@@ -94,10 +98,10 @@ public class Dijkstra<E extends Edge<I>, I extends EdgeIdentifier<I>> {
 	 * @return {@code Map<Edge, Double>}.
 	 */
 	@SafeVarargs
-	public final Map<E, Double> costs(final E... targets) {
-		final Map<E, Double> result = new HashMap<>();
+	public final Map<I, Double> costs(final E... targets) {
+		final Map<I, Double> result = new HashMap<>();
 		for (final E target : targets) {
-			result.put(target, visited.getOrDefault(target, INFINITY_EDGE).reachCost);
+			result.put(target.id(), visited.getOrDefault(target.id(), INFINITY_EDGE).reachCost);
 		}
 		return result;
 	}
@@ -113,7 +117,7 @@ public class Dijkstra<E extends Edge<I>, I extends EdgeIdentifier<I>> {
 	public Optional<Route<E>> pathFromTo(final E start, final E target) {
 		setAborter(new TargetDijkstraAborter<>(target));
 		run(start);
-		return routes(target).get(target);
+		return routes(target).get(target.id());
 	}
 
 	/**
@@ -127,7 +131,7 @@ public class Dijkstra<E extends Edge<I>, I extends EdgeIdentifier<I>> {
 	public Double costFromTo(final E start, final E target) {
 		setAborter(new TargetDijkstraAborter<>(target));
 		run(start);
-		return costs(target).get(target);
+		return costs(target).get(target.id());
 	}
 
 	private Optional<Route<E>> createRoute(final E target) {
@@ -145,12 +149,12 @@ public class Dijkstra<E extends Edge<I>, I extends EdgeIdentifier<I>> {
 		}
 	}
 
-	private void enqueue(final DijkstraEdge<E, I> dijkstraEdge) {
+	private void enqueue(final DijkstraEdge<E> dijkstraEdge) {
 		queue.offer(dijkstraEdge);
-		visited.put(dijkstraEdge.edge, dijkstraEdge);
+		visited.put(dijkstraEdge.edge().id(), dijkstraEdge);
 	}
 
-	private void relax(final DijkstraEdge<E, I> dijkstraEdge) {
+	private void relax(final DijkstraEdge<E> dijkstraEdge) {
 		final var adjacentDijkstraEdges = dijkstraAdjacents(dijkstraEdge);
 		for (final var adjacent : adjacentDijkstraEdges) {
 			if (notYetLazyInitialized(adjacent)) {
@@ -161,12 +165,12 @@ public class Dijkstra<E extends Edge<I>, I extends EdgeIdentifier<I>> {
 		}
 	}
 
-	private boolean notYetLazyInitialized(final DijkstraEdge<E, I> dijkstraEdge) {
-		return !isCreated(dijkstraEdge.edge);
+	private boolean notYetLazyInitialized(final DijkstraEdge<E> dijkstraEdge) {
+		return !isCreated(dijkstraEdge.edge());
 	}
 
 	private boolean isCreated(final E edge) {
-		return visited.containsKey(edge);
+		return visited.containsKey(edge.id());
 	}
 
 	private List<E> backtrack(final E targetEdge) {
@@ -174,39 +178,43 @@ public class Dijkstra<E extends Edge<I>, I extends EdgeIdentifier<I>> {
 		var currentEdge = targetEdge;
 		do {
 			result.add(currentEdge);
-			final var dijkstraEdge = visited.get(currentEdge);
+			final var dijkstraEdge = visited.get(currentEdge.id());
 			currentEdge = dijkstraEdge.predecessor;
 		} while (!(currentEdge == null));
 		Collections.reverse(result);
 		return result;
 	}
 
-	private DijkstraEdge<E, I> poll() {
+	private DijkstraEdge<E> poll() {
 		return queue.poll();
 	}
 
-	private List<DijkstraEdge<E, I>> dijkstraAdjacents(final DijkstraEdge<E, I> dijkstraEdge) {
+	private List<DijkstraEdge<E>> dijkstraAdjacents(final DijkstraEdge<E> dijkstraEdge) {
 		return graph.adjacents(dijkstraEdge.edge).stream().map((e) -> new DijkstraEdge<>(e, dijkstraEdge))
 				.collect(Collectors.toList());
 	}
 
-	private void update(final DijkstraEdge<E, I> adjacent) {
-		final DijkstraEdge<E, I> original = visited.get(adjacent.edge);
+	private void update(final DijkstraEdge<E> adjacent) {
+		final DijkstraEdge<E> original = visited.get(adjacent.edge().id());
 		if (original.reachCost > adjacent.reachCost) {
 			remove(original);
 			enqueue(adjacent);
 		}
 	}
 
-	private void remove(final DijkstraEdge<E, I> dijkstraEdge) {
+	private void remove(final DijkstraEdge<E> dijkstraEdge) {
 		queue.remove(dijkstraEdge);
-		visited.remove(dijkstraEdge.edge);
+		visited.remove(dijkstraEdge.edge().id());
 	}
 
 	private boolean queueIsEmpty() {
 		return queue.isEmpty();
 	}
 
+	/**
+	 * This class encapsulates an {@code Edge} for Dijkstra routing.  Note that for routing purposes
+	 * @param <E>
+	 */
 	private static class DijkstraEdge<E extends Edge<?>> implements Comparable<DijkstraEdge<E>> {
 
 		private final E edge;
@@ -219,7 +227,7 @@ public class Dijkstra<E extends Edge<I>, I extends EdgeIdentifier<I>> {
 			this.reachCost = 0.0D;
 		}
 
-		private DijkstraEdge(final E edge, final DijkstraEdge<E, I> predecessor) {
+		private DijkstraEdge(final E edge, final DijkstraEdge<E> predecessor) {
 			this.edge = edge;
 			this.predecessor = predecessor.edge;
 			this.reachCost = predecessor.reachCost + predecessor.edge.weight();
@@ -231,27 +239,18 @@ public class Dijkstra<E extends Edge<I>, I extends EdgeIdentifier<I>> {
 			this.reachCost = cost;
 		}
 
+		E edge() {
+			return edge;
+		}
+
 		@Override
-		public int compareTo(final DijkstraEdge<E, I> o) {
+		public int compareTo(final DijkstraEdge<E> o) {
 			return Double.compare(this.reachCost, o.reachCost);
 		}
 
 		@Override
-		public boolean equals(final Object o) {
-			if (o instanceof final DijkstraEdge other) {
-				return edge.id().equals(other.edge.id());
-			}
-			return false;
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hashCode(edge);
-		}
-
-		@Override
 		public String toString() {
-			return "DijkstraEdge " + Arrays.asList(edge, predecessor, reachCost);
+			return getClass().getSimpleName() + " " + Arrays.asList(edge, predecessor, reachCost);
 		}
 	}
 

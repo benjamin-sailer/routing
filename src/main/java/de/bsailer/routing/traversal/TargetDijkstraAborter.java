@@ -1,7 +1,15 @@
-package de.bsailer.routing;
+package de.bsailer.routing.traversal;
+
+import de.bsailer.routing.model.Edge;
 
 import java.util.Objects;
 
+/**
+ * Simple implementation of {@code DijkstraAborter} that aborts when a target {@code Edge} is reached.
+ *
+ * @param <E> concrete type of the {@code Edge}
+ */
+@SuppressWarnings("ClassCanBeRecord")
 public class TargetDijkstraAborter<E extends Edge<?>> implements DijkstraAborter<E> {
 
 	private final E target;

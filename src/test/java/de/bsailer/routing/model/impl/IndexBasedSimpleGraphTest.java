@@ -12,7 +12,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class SimpleGraphTest {
+public class IndexBasedSimpleGraphTest {
 
 	@Mock
 	private Edge<SimpleEdgeIdentifier> edge1;
@@ -20,7 +20,7 @@ public class SimpleGraphTest {
 	@Mock
 	private Edge<SimpleEdgeIdentifier> edge2;
 
-	private final SimpleGraph<Edge<SimpleEdgeIdentifier>, SimpleEdgeIdentifier> sut = new SimpleGraph<>();
+	private final IndexBasedSimpleGraph<Edge<SimpleEdgeIdentifier>, SimpleEdgeIdentifier> sut = new IndexBasedSimpleGraph<>();
 
 	@Test
 	public void givenGraphDeliversAdjacents() {

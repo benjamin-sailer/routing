@@ -1,29 +1,35 @@
-package de.bsailer.routing;
+package de.bsailer.routing.factory;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Collections;
-import java.util.stream.Stream;
-
+import de.bsailer.routing.model.impl.SimpleEdge;
+import de.bsailer.routing.model.impl.SimpleEdgeIdentifier;
+import de.bsailer.routing.model.impl.SimpleGraph;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.Collections;
+import java.util.stream.Stream;
+
+import static org.junit.Assert.assertEquals;
+
 @RunWith(MockitoJUnitRunner.class)
 public class SimpleGraphFactoryTest {
 
-	private static final SimpleEdgeIdentifier ID = new SimpleEdgeIdentifier(0);
 	@Test
-	public void givenEmptyStreamShouldCreateEmptyGraph() {
-		assertEquals(new SimpleGraph(), new SimpleGraphFactory().createGraph(Stream.empty()));
+	public void givenEmptyStreamCreateSimpleGraphShouldCreateEmptySimpleGraph() {
+		final var result = new SimpleGraphFactory().createSimpleGraph(Stream.empty());
+		assertEquals(SimpleGraph.class, result.getClass());
 	}
 
 	@Test
 	public void givenOneLineShouldCreateGraphWithOneEdge() {
-		final var expected = new SimpleGraph();
-		expected.addEdge(new SimpleEdge(ID).setWeight(1.0D));
-		assertEquals(expected,
-				new SimpleGraphFactory().createGraph(Stream.of("1.0D;")));
+		final var result = new SimpleGraphFactory().createSimpleGraph(Stream.of("0;1.0;1", "1;3.0;1"));
+		final var fromEdge = new SimpleEdge(new SimpleEdgeIdentifier(0));
+		assertEquals(Collections.singletonList(new SimpleEdgeIdentifier(1)),
+				result.adjacents(fromEdge)
+					.stream()
+					.map(SimpleEdge::id)
+					.toList());
 	}
 
 }
