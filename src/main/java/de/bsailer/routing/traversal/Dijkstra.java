@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * This class implements a Dijkstra algorithm for finding the shortest paths.
+ * This class implements a Dijkstra algorithm for finding the shortest prohibitedPaths.
  *
  * The workflow consists of the following steps:
  * <ol>
@@ -36,12 +36,12 @@ public class Dijkstra<E extends Edge<I>, I extends EdgeIdentifier<I>> {
 			throw new UnsupportedOperationException("the infinity DijkstraEdge has no underlying graph edge");
 		}
 	};
-	private final Graph<E> graph;
+	private final Graph<E, I> graph;
 	private final PriorityQueue<DijkstraEdge<E>> queue = new PriorityQueue<>();
 	private final Map<I, DijkstraEdge<E>> visited = new HashMap<>();
 	private DijkstraAborter<E> aborter = new DefaultDijkstraAborter<>();
 
-	public Dijkstra(final Graph<E> graph) {
+	public Dijkstra(final Graph<E, I> graph) {
 		this.graph = graph;
 	}
 
@@ -72,7 +72,7 @@ public class Dijkstra<E extends Edge<I>, I extends EdgeIdentifier<I>> {
 
 	/**
 	 * This method gives a mapping between given targets and
-	 * ({@code Optional<Route>} (which is empty in case no path has been found).
+	 * ({@code Optional<Route>} (which is empty in case no edgeIds has been found).
 	 *
 	 * It is guaranteed to have an entry in the result map for each given target.
 	 *
@@ -90,7 +90,7 @@ public class Dijkstra<E extends Edge<I>, I extends EdgeIdentifier<I>> {
 
 	/**
 	 * This method gives a mapping between given targets and reaching cost (which is
-	 * {@code Double.POSITIVE_INFINITY} in case no path has been found).
+	 * {@code Double.POSITIVE_INFINITY} in case no edgeIds has been found).
 	 *
 	 * It is guaranteed to have an entry in the result map for each given target.
 	 *
@@ -111,7 +111,7 @@ public class Dijkstra<E extends Edge<I>, I extends EdgeIdentifier<I>> {
 	 *
 	 * @param start  {@code Edge}
 	 * @param target {@code Edge}
-	 * @return {@code Optional<Route>}, which is empty in case no path has been
+	 * @return {@code Optional<Route>}, which is empty in case no edgeIds has been
 	 *         found.
 	 */
 	public Optional<Route<E>> pathFromTo(final E start, final E target) {
@@ -125,7 +125,7 @@ public class Dijkstra<E extends Edge<I>, I extends EdgeIdentifier<I>> {
 	 *
 	 * @param start  {@code Edge}
 	 * @param target {@code Edge}
-	 * @return cost, which is {@code Double.POSITIVE_INFINITY} in case no path has
+	 * @return cost, which is {@code Double.POSITIVE_INFINITY} in case no edgeIds has
 	 *         been found.
 	 */
 	public Double costFromTo(final E start, final E target) {
@@ -190,7 +190,7 @@ public class Dijkstra<E extends Edge<I>, I extends EdgeIdentifier<I>> {
 	}
 
 	private List<DijkstraEdge<E>> dijkstraAdjacents(final DijkstraEdge<E> dijkstraEdge) {
-		return graph.adjacents(dijkstraEdge.edge).stream().map((e) -> new DijkstraEdge<>(e, dijkstraEdge))
+		return graph.adjacents(dijkstraEdge.edge().id()).stream().map((e) -> new DijkstraEdge<>(e, dijkstraEdge))
 				.collect(Collectors.toList());
 	}
 

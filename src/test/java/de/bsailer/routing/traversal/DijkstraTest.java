@@ -23,7 +23,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class DijkstraTest {
 
 	@Mock
-	private Graph<Edge<SimpleEdgeIdentifier>> graph;
+	private Graph<Edge<SimpleEdgeIdentifier>, SimpleEdgeIdentifier> graph;
 
 	private final Edge<SimpleEdgeIdentifier> startEdge = new SimpleEdge(new SimpleEdgeIdentifier(1));
 
@@ -53,9 +53,9 @@ public class DijkstraTest {
 	 */
 	@Test
 	public void givenTwoEdgesShorterChosenAsRoute() {
-		when(graph.adjacents(startEdge)).thenReturn(List.of(shortEdge, longEdge));
-		when(graph.adjacents(shortEdge)).thenReturn(List.of(targetEdge));
-		when(graph.adjacents(longEdge)).thenReturn(List.of(targetEdge));
+		when(graph.adjacents(startEdge.id())).thenReturn(List.of(shortEdge, longEdge));
+		when(graph.adjacents(shortEdge.id())).thenReturn(List.of(targetEdge));
+		when(graph.adjacents(longEdge.id())).thenReturn(List.of(targetEdge));
 		sut = new Dijkstra<>(graph);
 		assertEquals(new Route<>(List.of(startEdge, shortEdge, targetEdge)), sut.pathFromTo(startEdge, targetEdge).get());
 	}
@@ -72,9 +72,9 @@ public class DijkstraTest {
 	 */
 	@Test
 	public void givenTwoEdgesShorterCostShouldBeReturned() {
-		when(graph.adjacents(startEdge)).thenReturn(List.of(shortEdge, longEdge));
-		when(graph.adjacents(shortEdge)).thenReturn(List.of(targetEdge));
-		when(graph.adjacents(longEdge)).thenReturn(List.of(targetEdge));
+		when(graph.adjacents(startEdge.id())).thenReturn(List.of(shortEdge, longEdge));
+		when(graph.adjacents(shortEdge.id())).thenReturn(List.of(targetEdge));
+		when(graph.adjacents(longEdge.id())).thenReturn(List.of(targetEdge));
 		sut = new Dijkstra<>(graph);
 		assertEqualsDouble(3.0D, sut.costFromTo(startEdge, targetEdge));
 	}
@@ -91,10 +91,10 @@ public class DijkstraTest {
 	 */
 	@Test
 	public void givenTargetEdgeReachedButQueueNotEmpty() {
-		when(graph.adjacents(startEdge)).thenReturn(List.of(shortEdge, longEdge));
-		when(graph.adjacents(shortEdge)).thenReturn(List.of(targetEdge));
-		when(graph.adjacents(longEdge)).thenReturn(List.of(targetEdge));
-		when(graph.adjacents(targetEdge)).thenReturn(List.of(mediumEdge));
+		when(graph.adjacents(startEdge.id())).thenReturn(List.of(shortEdge, longEdge));
+		when(graph.adjacents(shortEdge.id())).thenReturn(List.of(targetEdge));
+		when(graph.adjacents(longEdge.id())).thenReturn(List.of(targetEdge));
+		when(graph.adjacents(targetEdge.id())).thenReturn(List.of(mediumEdge));
 		sut = new Dijkstra<>(graph);
 		assertEquals(new Route<>(List.of(startEdge, shortEdge, targetEdge)), sut.pathFromTo(startEdge, targetEdge).get());
 	}
@@ -111,11 +111,11 @@ public class DijkstraTest {
 	 */
 	@Test
 	public void givenTwoPathsShorterChoosen() {
-		when(graph.adjacents(startEdge)).thenReturn(List.of(shortEdge, longEdge));
-		when(graph.adjacents(longEdge)).thenReturn(List.of(veryShortEdge));
-		when(graph.adjacents(shortEdge)).thenReturn(List.of(veryLongEdge));
-		when(graph.adjacents(veryShortEdge)).thenReturn(List.of(targetEdge));
-		when(graph.adjacents(veryLongEdge)).thenReturn(List.of(targetEdge));
+		when(graph.adjacents(startEdge.id())).thenReturn(List.of(shortEdge, longEdge));
+		when(graph.adjacents(longEdge.id())).thenReturn(List.of(veryShortEdge));
+		when(graph.adjacents(shortEdge.id())).thenReturn(List.of(veryLongEdge));
+		when(graph.adjacents(veryShortEdge.id())).thenReturn(List.of(targetEdge));
+		when(graph.adjacents(veryLongEdge.id())).thenReturn(List.of(targetEdge));
 		sut = new Dijkstra<>(graph);
 		assertEquals(new Route<>(List.of(startEdge, longEdge, veryShortEdge, targetEdge)),
 				sut.pathFromTo(startEdge, targetEdge).get());
@@ -133,12 +133,12 @@ public class DijkstraTest {
 	 */
 	@Test
 	public void givenTwoPathsInitialSolutionReplaced() {
-		when(graph.adjacents(startEdge)).thenReturn(List.of(shortEdge, veryLongEdge));
-		when(graph.adjacents(shortEdge)).thenReturn(List.of(veryShortEdge));
-		when(graph.adjacents(mediumEdge)).thenReturn(List.of(veryShortEdge));
-		when(graph.adjacents(veryShortEdge)).thenReturn(List.of(mediumEdge));
-		when(graph.adjacents(veryLongEdge)).thenReturn(List.of(mediumEdge));
-		when(graph.adjacents(mediumEdge)).thenReturn(List.of(targetEdge));
+		when(graph.adjacents(startEdge.id())).thenReturn(List.of(shortEdge, veryLongEdge));
+		when(graph.adjacents(shortEdge.id())).thenReturn(List.of(veryShortEdge));
+		when(graph.adjacents(mediumEdge.id())).thenReturn(List.of(veryShortEdge));
+		when(graph.adjacents(veryShortEdge.id())).thenReturn(List.of(mediumEdge));
+		when(graph.adjacents(veryLongEdge.id())).thenReturn(List.of(mediumEdge));
+		when(graph.adjacents(mediumEdge.id())).thenReturn(List.of(targetEdge));
 		sut = new Dijkstra<>(graph);
 		assertEquals(new Route<>(List.of(startEdge, shortEdge, veryShortEdge, mediumEdge, targetEdge)),
 				sut.pathFromTo(startEdge, targetEdge).get());
@@ -146,24 +146,33 @@ public class DijkstraTest {
 
 	@Test
 	public void givenIncompletePathsToTarget() {
-		when(graph.adjacents(startEdge)).thenReturn(List.of(shortEdge, veryLongEdge));
+		when(graph.adjacents(startEdge.id())).thenReturn(List.of(shortEdge, veryLongEdge));
 		sut = new Dijkstra<>(graph);
 		assertFalse(sut.pathFromTo(startEdge, targetEdge).isPresent());
 	}
 
 	@Test
 	public void givenIncompletePathsToTargetShouldGivePositiveInfinityWeight() {
-		when(graph.adjacents(startEdge)).thenReturn(List.of(shortEdge, veryLongEdge));
+		when(graph.adjacents(startEdge.id())).thenReturn(List.of(shortEdge, veryLongEdge));
 		sut = new Dijkstra<>(graph);
 		assertEqualsDouble(Double.POSITIVE_INFINITY, sut.costFromTo(startEdge, targetEdge));
 	}
 
 	@Test
 	public void givenGraphIsTraversedCostsReturnsTheCostMap() {
-		when(graph.adjacents(startEdge)).thenReturn(List.of(veryShortEdge));
+		when(graph.adjacents(startEdge.id())).thenReturn(List.of(targetEdge));
 		sut = new Dijkstra<>(graph);
 		sut.run(startEdge);
-		assertEquals(Collections.singletonMap(new SimpleEdgeIdentifier(2), 0.0D), sut.costs(veryShortEdge));
+		assertEquals(Collections.singletonMap(targetEdge.id(), 0.0D), sut.costs(targetEdge));
+	}
+
+	@Test
+	public void givenGraphIsTraversedCostsReturnsCostFromEndOfStartEdgeToStartOfEndEdge() {
+		when(graph.adjacents(startEdge.id())).thenReturn(List.of(veryShortEdge));
+		when(graph.adjacents(veryShortEdge.id())).thenReturn(List.of(targetEdge));
+		sut = new Dijkstra<>(graph);
+		sut.run(startEdge);
+		assertEquals(Collections.singletonMap(targetEdge.id(), veryShortEdge.weight()), sut.costs(targetEdge));
 	}
 
 }

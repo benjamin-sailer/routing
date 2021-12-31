@@ -29,7 +29,14 @@ public class SimpleGraphTest {
 		sut.addEdge(edge1);
 		sut.addEdge(edge2);
 		sut.connectEdges(edge1.id(), edge2.id());
-		assertEquals(Collections.singletonList(edge2), sut.adjacents(edge1));
+		assertEquals(Collections.singletonList(edge2), sut.adjacents(edge1.id()));
+	}
+
+	@Test
+	public void givenEdgeIdGraphDeliversEdge() {
+		when(edge1.id()).thenReturn(new SimpleEdgeIdentifier(1));
+		sut.addEdge(edge1);
+		assertEquals(edge1, sut.edge(new SimpleEdgeIdentifier(1)));
 	}
 
 }
